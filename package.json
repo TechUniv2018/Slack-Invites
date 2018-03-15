@@ -10,6 +10,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "babel": "^6.23.0",
+    "babel-eslint": "^8.2.2",
     "nodemon": "^1.17.2",
     "pg": "^7.4.1",
     "postgresql": "0.0.1",
