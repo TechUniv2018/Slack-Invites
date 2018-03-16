@@ -17,7 +17,7 @@ const loadBotUser = () => bot.getUsers()
     allUsers[user.id] = user.name;
   }));
 bot.on('start', () => {
-  loadBotUser().then(() => { });
+  loadBotUser().then(() => { console.log('start'); });
 
   // bot.postMessageToChannel('general', 'Hello channel!');
   // bot.postMessageToUser('srivastavaparth2016', 'hello peeps!');
@@ -29,13 +29,14 @@ bot.on('start', () => {
 });
 
 bot.on('message', (msg) => {
+  console.log('msg', msg);
   if (msg.type === 'message') {
     if (msg.text.indexOf('invitation') >= 0) {
       const message = msg.text;
       const recipients = new Set(message.split(/[<>]+/)
         .filter(e => e[0] === '@'));
       for (const id of recipients) {
-        bot.postMessageToUser(allUsers[id.slice(1)], 'You are invited');
+        bot.postMessageToUser(allUsers[id.slice(1)], 'hi');
       }
       // bot.postMessageToChannel('general', msg.text);
     }
