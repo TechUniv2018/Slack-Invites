@@ -1,74 +1,57 @@
-// const { WebClient } = require('@slack/client');
-const Bot = require('slackbots');
-const key = require('./constants/keys');
+const { RTMClient, WebClient } = require('@slack/client');
+const keys = require('./constants/keys');
 
-// create a bot
-const settings = {
-  token: key,
-  name: 'Invitations',
-};
-const bot = new Bot(settings);
+const token = keys;
 
-const allUsers = [];
-const loadBotUser = () => {
-  const promise = new Promise((resolve) => {
-    bot.getUsers()
-      .then(result => result.members.filter(eachUser =>
-        eachUser.is_bot === false && eachUser.id !== 'USLACKBOT'))
-      .then(users => users.forEach((user) => {
-        allUsers[user.id] = user.name;
-      })).then(() => {
-        resolve(allUsers);
+// The client is initialized and then started to get an active connection to the platform
+const rtm = new RTMClient(token);
+rtm.start();
+
+// Need a web client to find a channel where the app can post a message
+const web = new WebClient(token);
+
+// Load the current channels list asynchrously
+web.channels.list()
+  .then((res) => {
+    // Take any channel for which the bot is a member
+    const conversationId = res.channels.find(c => c.is_member);
+    web.chat.postMessage({
+      channel: 'C9R9F2RFZ',
+      text: 'Hello there',
+    }).then((res) => {
+      // `res` contains information about the posted message
+      console.log('Message sent: ', res.ts);
+    })
+      .catch(() => {
+        console.log('hi');
+        console.error;
       });
-  });
-  return promise;
-};
+  }).catch(console.log);
 
-bot.on('start', () => {
-  // console.log('here');
-  loadBotUser().then(() => {
-    // console.log('started', res);
-  });
-});
-
-bot.on('message', (msg) => {
-  console.log('msg', msg, msg.channel);
-  if (msg.type === 'message') {
-    if (msg.text.indexOf('invitation') >= 0) {
-      const message = msg.text;
-      const recipients = new Set(message.split(/[<>]+/)
-        .filter(e => e[0] === '@'));
-      for (const id of recipients) {
-        bot.postMessageToUser(allUsers[id.slice(1)], 'hi man whatsup?');
-      }
-    }
+//     if (channel) {
+//       // We now have a channel ID to post a message in!
+//       // use the `sendMessage()` method to send a simple string to a channel using the channel ID
+//       rtm.sendMessage('Hello, world!', channel.id)
+//         // Returns a promise that resolves when the message is sent
+//         .then(msg => console.log(`Message sent to channel ${channel.name} with ts:${msg.ts}`))
+//         .catch(console.error);
+//     } else {
+//       console.log('This bot does not belong to any channel, invite it to at least one and try again');
+//     }
+//   });
+rtm.on('message', (event) => {
+  // For structure of `event`, see https://api.slack.com/events/message
+  console.log(event);
+  const message = event;
+  // Skip messages that are from a bot or my own user ID
+  if ((message.subtype && message.subtype === 'message') ||
+         (!message.subtype && message.user === rtm.activeUserId)) {
+    web.chat.postMessage({ text: 'Hi I am slack Bot.', channel: 'C9R9F2RFZ' }).then(msg => console.log(`Message sent to channel D9PN1DAQG with ts:${msg.ts}`))
+      .catch(console.error);
   }
 });
 
-// An access token (from your Slack app or custom integration - xoxp, xoxb, or xoxa)
-// const token = key;
+//   // Log the message
+//   console.log(`(channel:${message.channel}) ${message.user} says: ${message.text}`);
+// });
 
-// const web = new WebClient(token);
-
-// // This argument can be a channel ID, a DM ID, a MPDM ID, or a group ID
-// const conversationId = 'D9PN1DAQG';
-
-// // See: https://api.slack.com/methods/chat.postMessage
-// web.chat.postMessage({
-//   channel: conversationId,
-//   text: 'Hello there',
-//   attachments: [
-//     {
-//       text: 'Choose a game to play',
-//       fallback: 'You are unable to choose a game',
-//       callback_id: 'wopr_game',
-//       color: '#3AA3E3',
-//       attachment_type: 'default',
-//     },
-//   ],
-// })
-//   .then((res) => {
-//     // `res` contains information about the posted message
-//     console.log('Message sent: ', res.ts);
-//   })
-//   .catch(console.error);
